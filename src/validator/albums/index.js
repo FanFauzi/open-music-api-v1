@@ -8,6 +8,6 @@ const AlbumsValidator = {
       throw new InvariantError(validationResult.error.message);
     }
   },
-}
+};
 
-module.exports = { AlbumsValidator };
+module.exports = AlbumsValidator;
