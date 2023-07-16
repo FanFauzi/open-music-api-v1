@@ -1,4 +1,4 @@
-const InvariantError = require('../../exceptions/InvariantError');
+const InvariantError = require('../../excepcionts/InvariantError');
 const { AlbumsPayloadSchema } = require('./schema');
 
 const AlbumsValidator = {
@@ -10,4 +10,4 @@ const AlbumsValidator = {
   },
 };
 
-module.exports = AlbumsValidator;
+module.exports = { AlbumsValidator };

@@ -1,7 +1,8 @@
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
-const InvariantError = require('../../exceptions/InvariantError');
-const NotFoundError = require('../../exceptions/NotFoundError');
+
+const InvariantError = require('../../excepcionts/InvariantError');
+const NotFoundError = require('../../excepcionts/NotFoundError');
 
 class SongsService {
   constructor() {
@@ -9,19 +10,19 @@ class SongsService {
   }
 
   async addSong({
-    // Destructuring dilakukan disini,tidak di layer Handler
     title,
     year,
     performer,
     genre,
     duration,
     albumId,
+    owner,
   }) {
     const id = `song-${nanoid(16)}`;
 
     const query = {
-      text: 'INSERT INTO songs VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id',
-      values: [id, title, year, performer, genre, duration, albumId],
+      text: 'INSERT INTO songs VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+      values: [id, title, year, performer, genre, duration, albumId, owner],
     };
 
     const result = await this.SongPool.query(query);
@@ -32,7 +33,7 @@ class SongsService {
     return result.rows[0].id;
   }
 
-  async getSongs(title, performer) {
+  async getSongs(title, performer, owner) {
     let result;
 
     if (title && performer) {
@@ -50,7 +51,12 @@ class SongsService {
       return result.rows;
     }
 
-    result = await this.SongPool.query('SELECT id, title, performer FROM songs');
+    const query = {
+      text: 'SELECT id, title, performer FROM songs WHERE owner = $1',
+      values: [owner],
+    };
+
+    result = await this.SongPool.query(query);
 
     if (!result.rows.length) {
       throw new NotFoundError('Song tidak ditemukan');
@@ -101,6 +107,19 @@ class SongsService {
 
     if (!result.rows.length) {
       throw new NotFoundError('Song gagal dihapus. Id tidak ditemukan');
+    }
+  }
+
+  async verifySongOwner(id) {
+    const query = {
+      text: 'SELECT * FROM songs WHERE id = $1',
+      values: [id],
+    };
+
+    const result = await this.SongPool.query(query);
+
+    if (!result.rows.length) {
+      throw new NotFoundError('Resource yang Anda minta tidak ditemukan');
     }
   }
 }

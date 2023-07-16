@@ -1,7 +1,8 @@
+/* eslint-disable no-underscore-dangle */
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
-const InvariantError = require('../../exceptions/InvariantError');
-const NotFoundError = require('../../exceptions/NotFoundError');
+const InvariantError = require('../../excepcionts/InvariantError');
+const NotFoundError = require('../../excepcionts/NotFoundError');
 
 class AlbumsService {
   constructor() {
@@ -24,28 +25,19 @@ class AlbumsService {
     return result.rows[0].id;
   }
 
-  async getAlbumById(albumId) {
-    const queryAlbum = {
+  async getAlbumById(id) {
+    const query = {
       text: 'SELECT * FROM albums WHERE id = $1',
-      values: [albumId],
-    };
-    const querySong = {
-      text: 'SELECT id, title, performer FROM songs WHERE "albumId" = $1',
-      values: [albumId],
+      values: [id],
     };
 
-    const result = await this.AlbumPool.query(queryAlbum);
-    const songs = await this.AlbumPool.query(querySong);
+    const result = await this.AlbumPool.query(query);
+    // const songs = await this.AlbumPool.query(querySong);
 
     if (!result.rows.length) {
       throw new NotFoundError('Album tidak ditemukan');
     }
-
-    const response = {
-      ...result.rows[0],
-      songs: songs.rows.map(({ id, title, performer }) => ({ id, title, performer })),
-    };
-    return response;
+    return result.rows[0];
   }
 
   async editAlbumById(id, { name, year }) {

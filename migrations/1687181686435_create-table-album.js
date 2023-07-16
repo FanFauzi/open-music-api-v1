@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 
-exports.up = (pgm) => {
+exports.up = pgm => {
   pgm.createTable('albums', {
     id: {
       type: 'VARCHAR(22)',
@@ -11,12 +11,12 @@ exports.up = (pgm) => {
       notNull: true,
     },
     year: {
-      type: 'integer',
+      type: 'smallserial',
       notNull: true,
-    },
+    }
   });
 };
 
-exports.down = (pgm) => {
+exports.down = pgm => {
   pgm.dropTable('albums');
 };

@@ -1,32 +1,30 @@
-/* eslint-disable no-underscore-dangle */
 class SongsHandler {
   constructor(service, validator) {
-    this._SongService = service;
+    this.SongService = service;
     this.validator = validator;
   }
 
   async postSongHandler(request, h) {
     this.validator.validateSongPayload(request.payload);
-    // Tidak perlu Destructuring di sini,karean sudah di lakukan pada layer Service
-    // const {
-    //   title,
-    //   year,
-    //   performer,
-    //   genre,
-    //   duration,
-    //   albumId,
-    // } = request.payload;
+    const {
+      title = 'untitled',
+      year,
+      performer,
+      genre,
+      duration,
+      albumId,
+    } = request.payload;
+    const { id: credentialId } = request.auth.credentials;
 
-    // Mengambil langsung dari request.payload
-    // const songId = await this._SongService.addSong({
-    //   title,
-    //   year,
-    //   performer,
-    //   genre,
-    //   duration,
-    //   albumId,
-    // });
-    const songId = await this._SongService.addSong(request.payload);
+    const songId = await this.SongService.addSong({
+      title,
+      year,
+      performer,
+      genre,
+      duration,
+      albumId,
+      owner: credentialId,
+    });
 
     const response = h.response({
       status: 'success',
@@ -40,8 +38,9 @@ class SongsHandler {
   }
 
   async getAllSongsHandler(request) {
+    const { id: credentialId } = request.auth.credentials;
     const { title, performer } = request.query;
-    const songs = await this._SongService.getSongs(title, performer);
+    const songs = await this.SongService.getSongs(title, performer, credentialId);
     return {
       status: 'success',
       data: {
@@ -52,7 +51,11 @@ class SongsHandler {
 
   async getSongByIdHandler(request) {
     const { id } = request.params;
-    const song = await this._SongService.getSongById(id);
+    const { id: credentialId } = request.auth.credentials;
+
+    await this.SongService.verifySongOwner(id, credentialId);
+    const song = await this.SongService.getSongById(id);
+
     return {
       status: 'success',
       data: {
@@ -63,7 +66,6 @@ class SongsHandler {
 
   async putSongByIdHandler(request) {
     this.validator.validateSongPayload(request.payload);
-
     const {
       title,
       year,
@@ -72,8 +74,10 @@ class SongsHandler {
       duration,
     } = request.payload;
     const { id } = request.params;
+    const { id: credentialId } = request.auth.credentials;
 
-    await this._SongService.editSongById(
+    await this.SongService.verifySongOwner(id, credentialId);
+    await this.SongService.editSongById(
       id,
       {
         title,
@@ -92,7 +96,11 @@ class SongsHandler {
 
   async deleteSongByIdHandler(request) {
     const { id } = request.params;
-    await this._SongService.deleteSongById(id);
+    const { id: credentialId } = request.auth.credentials;
+
+    await this.SongService.verifySongOwner(id, credentialId);
+    await this.SongService.deleteSongById(id);
+
     return {
       status: 'success',
       message: 'Song berhasil dihapus',
